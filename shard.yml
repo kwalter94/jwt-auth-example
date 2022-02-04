@@ -1,0 +1,19 @@
+name: jwt-auth
+version: 0.1.0
+
+authors:
+  - kwalter <walterkaunda@live.co.uk>
+
+targets:
+  jwt-auth:
+    main: src/jwt-auth.cr
+    
+dependencies:
+  kemal:
+    github: kemalcr/kemal
+  jwt:
+    github: crystal-community/jwt
+
+crystal: 1.3.2
+
+license: MIT
