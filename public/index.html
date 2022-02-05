@@ -18,7 +18,7 @@
         async function authenticateThen(request, retries = 3) {
           if (retries <= 0) throw "Failed to authenticate with server";
           
-          if (!auth.token) await authenticate();
+          if (!auth.token) await refreshToken();
 
           const response = await request({Authorization: `Bearer ${auth.token}`});
 
@@ -32,7 +32,7 @@
           return response
         }
         
-        async function authenticate() {
+        async function refreshToken() {
           console.log("Attempting to refresh token...");
           const response = await fetch("/auth/refresh-token", {method: "POST"});
           
