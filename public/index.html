@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Token based auth demo</title>
+    <style>
+      .profile-info-label {
+        font-weight: bold;
+      }
+      
+      #login-page {
+        display: none;
+      }
+    </style>
+    <script>
+      window.addEventListener("load", async function(_event) {
+        let auth = { token: null, user: null };
+        
+        async function authenticateThen(request, retries = 3) {
+          if (retries <= 0) throw "Failed to authenticate with server";
+          
+          if (!auth.token) await authenticate();
+
+          const response = await request({Authorization: `Bearer ${auth.token}`});
+
+          if (response.status_code == 401) {
+            auth.token = null;
+            auth.user = null;
+
+            return authenticateThen(request, retries - 1);
+          }
+          
+          return response
+        }
+        
+        async function authenticate() {
+          console.log("Attempting to refresh token...");
+          const response = await fetch("/auth/refresh-token", {method: "POST"});
+          
+          if (response.status == 401) throw "You need to log in";
+
+          if (response.status != 200) throw "Failed to communicate with server";
+
+          const json = await response.json();
+          auth.token = json.token;
+          auth.user = json.user;
+        }
+
+        async function login(username, password) {
+          const headers = { "Content-type": "application/json" };
+          const body = JSON.stringify({ username, password });
+          const response = await fetch("/auth/login", { headers, body, method: "POST" });
+
+          if (response.status == 401) throw (await reponse.json()).message;
+
+          if (response.status != 200) {
+            console.error(`Log in failed: ${e}`);
+            throw "Failed to communicate with server";
+          }
+
+          const json = await response.json();
+          auth.token = json.token;
+          auth.user = json.user;
+        }
+        
+        async function logout() {
+          await fetch("/auth/refresh-token", {method: "DELETE"});
+          auth.token = null;
+          auth.user = null;
+
+          navigateTo("login-page", {message: "You have successfully been logged out"});
+        }
+
+        function navigateTo(pageId, params = {}) {
+          console.log(`Navigating to page ${pageId}`);
+          const page = document.getElementById(pageId);
+
+          if (!page) throw `Page #${pageId} does not exist`;
+          
+          const pages = document.getElementsByClassName("page");
+          Array.from(pages).forEach(page => page.style.display = "none");
+          page.style.display = "block";
+          
+          Object.entries(params).forEach(([param, value]) => {
+            const banner = page.querySelector(`#${param}`);
+
+            if (banner) banner.innerHTML = value;
+          });
+        }
+        
+        async function loadProfile() {
+          console.log("Loading profile...");
+          const fetchProfile = async headers => fetch("/profile", {headers});
+          const response = await authenticateThen(fetchProfile);
+          const {user, message} = await response.json();
+          
+          document.querySelector("#profile-info #user-id").innerHTML = user.id;
+          document.querySelector('#profile-info #username').innerHTML = user.username;
+          document.querySelector('#profile-info #status').innerHTML = message;
+        }
+
+        // Handle login form submit
+        const form = document.getElementById("login-form")
+        form.addEventListener("submit", async function(event) {
+          try {
+            event.preventDefault();
+            
+            const username = this.querySelector("[name=username]").value;
+            const password = this.querySelector("[name=password]").value;
+            
+            await login(username, password);
+            navigateTo('home-page');
+            loadProfile();
+          } catch (e) {
+            this.parentNode.querySelector("#message").innerHTML = e;
+          }
+        });
+        
+        const logoutButton = document.getElementById("logout-button");
+        logoutButton.addEventListener("click", function(event) {
+          event.preventDefault();
+
+          logout();
+        });
+        
+        try {
+          await loadProfile();
+        } catch (e) {
+          navigateTo('login-page', {message: e});
+        }
+      });
+    </script>
+  </head>
+  
+  <body>
+    <div id="home-page" class="page">
+      <table id="profile-info">
+        <tbody>
+          <tr>
+            <td class="profile-info-label">User ID</td>
+            <td id="user-id"></td>
+          <tr>
+            <td class="profile-info-label">Username</td>
+            <td><span id="username"></span>(<a id="logout-button" href="#">Logout</a>)</td>
+          </tr>
+          <tr>
+            <td class="profile-info-label">Status</td>
+            <td id="status"></td>
+          </tr>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div id="login-page" class="page">
+      <div id="message"></div>
+      <form id="login-form">
+        <div>
+          <label for="username">Username</label>
+          <input name="username" type="text" placeholder="Username" required>
+        </div>
+
+        <div>
+          <label for="password">Password</label>
+          <input name="password" type="password" placeholder="Password" required>
+        </div>
+
+        <input name="submit" type="submit" value="Log in">
+      </form>
+    </div>
+  </body>
+</html>
