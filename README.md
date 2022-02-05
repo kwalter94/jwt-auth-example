@@ -55,6 +55,7 @@ This demo utilises [Crystal](https://crystal-lang.org/) for the backend and
 plain old Javascript (no bells and whistles) on the frontend.
 
 ### Backend
+
 On the backend the first place you want to look at is
 [src/server.cr](./src/server.cr). There is some boiler plate at the top
 that sets up things like Middleware and various filters, you can ignore
@@ -72,6 +73,8 @@ some of the endpoints:
   thus token refreshes are disabled until a new one is generated after a
   log in.
   
+### Frontend
+
 For the frontend you need to look at [public/index.html]. You can pretty
 much ignore most of the HTML in this and go straight to the script on
 line 14 (as at the time of writing). Notice that the entire application
