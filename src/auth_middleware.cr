@@ -11,8 +11,9 @@ module AuthMiddleware
 
   # Middleware for JWT authentication.
   class Handler < Kemal::Handler
-    exclude ["/auth/login"], "POST"
-    exclude ["/auth/refresh-token"], "GET"
+    exclude ["/"], "GET"
+    exclude ["/auth/login", "/auth/refresh-token"], "POST"
+    exclude ["/auth/refresh-token"], "DELETE"
 
     def call(env : HTTP::Server::Context)
       return call_next(env) if exclude_match?(env)

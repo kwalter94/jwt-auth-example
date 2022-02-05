@@ -16,5 +16,7 @@ def set_cookie(env, name, value, **options)
 end
 
 def get_cookie(env, name)
-  env.request.cookies[name].try(&.value)
+  return nil unless env.request.cookies[name]?
+
+  env.request.cookies[name].value
 end

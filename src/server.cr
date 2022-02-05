@@ -16,20 +16,22 @@ before_all do |env|
 end
 
 post "/auth/login" do |env|
-  username = env.params.json["username"].as(String).try(&.strip)
-  password = env.params.json["password"].as(String).try(&.strip)
+  next render_error(env, "Username is required", status: 400) unless env.params.json["username"]?
+  next render_error(env, "Password is required", status: 400) unless env.params.json["password"]?
 
-  next render_error(env, "Username is required", status: 400) unless username
-  next render_error(env, "Password is required", status: 400) unless password
+  username = env.params.json["username"].as(String).strip
+  password = env.params.json["password"].as(String).strip
 
   auth = Auth.login(username, password)
   next render_error(env, "Invalid username or password", status: 400) unless auth
 
-  set_cookie(env, "refresh", auth[:refresh_token], path: "/auth/refresh-token", http_only: true)
+  refresh_token_expires = Time.unix(Time.utc.to_unix + Auth::REFRESH_TOKEN_VALIDITY)
+  set_cookie(env, "refresh", auth[:refresh_token], path: "/auth/refresh-token", http_only: true, expires: refresh_token_expires)
+
   render_json(env, { user: auth[:user], token: auth[:access_token] })
 end
 
-get "/auth/refresh-token" do |env|
+post "/auth/refresh-token" do |env|
   refresh_token = get_cookie(env, "refresh")
   next render_error(env, "User not logged in", status: 401) unless refresh_token
 
@@ -39,8 +41,18 @@ get "/auth/refresh-token" do |env|
   render_json(env, { user: user, token: Auth.generate_access_token(user) })
 end
 
-get "/" do |env|
+delete "/auth/refresh-token" do |env|
+  set_cookie(env, "refresh", "", expires: Time.utc, path: "/auth/refresh-token", http_only: true)
+
+  env.response.status_code = 204
+end
+
+get "/profile" do |env|
   render_json(env, { user: env.current_user, message: "Hello mortal" })
+end
+
+get "/" do |env|
+  env.redirect("/index.html")
 end
 
 def start_server
