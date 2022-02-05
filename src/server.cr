@@ -1,7 +1,10 @@
 require "kemal"
 
 require "./auth"
+require "./auth_middleware"
 require "./helpers"
+
+add_handler AuthMiddleware::Handler.new
 
 static_headers do |response, filepath, filestat|
   response.headers.add("Access-Control-Allow-Origin", "*") if filepath =~ /\.html$/
@@ -22,21 +25,22 @@ post "/auth/login" do |env|
   auth = Auth.login(username, password)
   next render_error(env, "Invalid username or password", status: 400) unless auth
 
-  set_cookie(env, "refresh", auth[:refresh_token], path: "/auth/refresh-token", http_only: true, secure: true)
+  set_cookie(env, "refresh", auth[:refresh_token], path: "/auth/refresh-token", http_only: true)
   render_json(env, { user: auth[:user], token: auth[:access_token] })
 end
 
 get "/auth/refresh-token" do |env|
   refresh_token = get_cookie(env, "refresh")
-  next render_error(env, "Login required", status: 401) unless refresh_token
+  next render_error(env, "User not logged in", status: 401) unless refresh_token
 
-  user_id = Auth.validate_token(refresh_token)
-  next render_error(env, "Login required", status: 401) unless user_id
+  user = Auth.validate_token(refresh_token)
+  next render_error(env, "User not logged in", status: 401) unless user
 
-  user = Users.find_by_id(user_id)
-  next render_error(env, "Login required", status: 401) unless user
+  render_json(env, { user: user, token: Auth.generate_access_token(user) })
+end
 
-  render_json(env, { user: user, token: Auth.generate_access_token(user_id) })
+get "/" do |env|
+  render_json(env, { user: env.current_user, message: "Hello mortal" })
 end
 
 def start_server

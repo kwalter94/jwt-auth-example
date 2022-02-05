@@ -22,24 +22,24 @@ module Auth
 
     {
       user: user,
-      access_token: generate_access_token(user.id),
-      refresh_token: generate_refresh_token(user.id)
+      access_token: generate_access_token(user),
+      refresh_token: generate_refresh_token(user)
     }
   end
 
-  def generate_access_token(user_id : Int32)
-    generate_token(user_id, ACCESS_TOKEN_VALIDITY)
+  def generate_access_token(user : User)
+    generate_token(user, ACCESS_TOKEN_VALIDITY)
   end
 
-  def generate_refresh_token(user_id : Int32)
-    generate_token(user_id, REFRESH_TOKEN_VALIDITY)
+  def generate_refresh_token(user : User)
+    generate_token(user, REFRESH_TOKEN_VALIDITY)
   end
 
-  # Generate a token for user with given user_id for `validity` seconds.
+  # Generate a token for user for `validity` seconds.
   #
   # Returns generated token as a `String`
-  def generate_token(user_id : Int32, validity : Int32)
-    payload = { "user_id" => user_id, "exp" => Time.utc.to_unix + validity}
+  def generate_token(user : User, validity : Int32)
+    payload = { "user_id" => user.id, "exp" => Time.utc.to_unix + validity}
     JWT.encode(payload, secret, JWT::Algorithm::HS256)
   end
 
@@ -49,7 +49,10 @@ module Auth
   def validate_token(token : String)
     payload, _headers = JWT.decode(token, secret, JWT::Algorithm::HS256)
 
-    payload["user_id"].as_i?
+    user_id = payload["user_id"].as_i?
+    return nil unless user_id
+
+    Users.find_by_id(user_id)
   rescue e: JWT::DecodeError
     Logger.warn(exception: e) { "Failed to decode jwt" }
     nil
