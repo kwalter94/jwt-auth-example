@@ -112,9 +112,10 @@ so that we attempt to log in.
 
 The rest is up to you to follow the code to understand what it is doing.
 For a similar thing but with NodeJS see
-[this](https://github.com/benawad/jwt-auth-example). NOTE: This is not
-meant for production, it is for educational purposes only. Take it as
-a starting point for your understanding of this token based API
+[this](https://github.com/benawad/jwt-auth-example).
+
+NOTE: This is not meant for production, it is for educational purposes only
+Take it as a starting point for your understanding of this token based API
 authentication stuff and maybe your introduction to
 [Crystal](https://crystal-lang.org). If you have anything to add or
 complain about, feel free to issue a pull request or raise an issue
