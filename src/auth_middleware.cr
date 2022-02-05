@@ -31,7 +31,7 @@ module AuthMiddleware
     def auth_error(env, message)
       env.response.status_code = 401
       env.response.content_type = "application/json"
-      env.response.print({ message: message }.to_json)
+      env.response.print({ error: message }.to_json)
     end
   end
 end

@@ -50,10 +50,9 @@
           const body = JSON.stringify({ username, password });
           const response = await fetch("/auth/login", { headers, body, method: "POST" });
 
-          if (response.status == 401) throw (await reponse.json()).message;
+          if (response.status == 401 || response.status == 400) throw (await response.json()).error;
 
           if (response.status != 200) {
-            console.error(`Log in failed: ${e}`);
             throw "Failed to communicate with server";
           }
 
@@ -111,6 +110,7 @@
             navigateTo('home-page');
             loadProfile();
           } catch (e) {
+            console.error(e);
             this.parentNode.querySelector("#message").innerHTML = e;
           }
         });
