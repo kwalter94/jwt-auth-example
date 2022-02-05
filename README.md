@@ -37,7 +37,7 @@ in an HTTP only cookie. The solution goes as follows:
       [CSRF](https://en.wikipedia.org/wiki/Cross-site_request_forgery) war
       memories; I can assure you that it is not something you should worry
       about too much here because the worst an attacker will do to your
-      application users' is their access token refresh.
+      application users' is to make them refresh access tokens.
 3. Frontend uses access token for normal requests up until when it expires
    (backend should respond with a 401) or the token is lost (browser was
    closed or page was refreshed).
