@@ -132,7 +132,7 @@ to contribute but can't guarantee a response.
     ```
 3. Run the damn thing:
     ```sh
-    crystal run src/server.cr
+    crystal run src/jwt-auth.cr
     ```
 4. Log in at http://localhost:3000 using the following credentials:
     username: admin
@@ -142,6 +142,7 @@ to contribute but can't guarantee a response.
    Maybe take a look at session/local storage to look for an access token.
    You should be able to see the refresh token in cookies, however it
    won't be accessible to any Javascript.
+
 ## Contributing
 
 1. Fork it (<https://github.com/your-github-user/jwt-auth/fork>)
